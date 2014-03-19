@@ -9,10 +9,10 @@ def get_empty(shot_grid):
         if state == "0":
             if find_row(index) % 2 == 0 and index % 2 == 0:
                 indices.append(index)
-                print "even", index, state
+                # print "even", index, state
             elif find_row(index) % 2 != 0 and index % 2 != 0:
                 indices.append(index)
-                print "odd", index, state
+                # print "odd", index, state
         else:
             pass
 

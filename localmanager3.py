@@ -324,7 +324,8 @@ def main():
     bot = __import__(module)
     summary = GameManager.play(bot)
     for k, v in summary.items():
-        print k, len(v)
+        print k, v
+
     sys.stdout.write(str(summary))
 
 if __name__ == "__main__":
