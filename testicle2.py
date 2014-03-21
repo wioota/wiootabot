@@ -3,61 +3,63 @@ import sys
 import random
 
 
-def get_empty(shot_grid):
+def get_empty(shot_grid, flag=True):
     indices = []
     for index, state in enumerate(shot_grid):
         if state == "0":
-            if find_row(index) % 2 == 0 and index % 2 == 0:
+            if flag and find_row(index) % 2 == 0 and index % 2 == 0:
                 indices.append(index)
                 # print "even", index, state
-            elif find_row(index) % 2 != 0 and index % 2 != 0:
+            elif flag and find_row(index) % 2 != 0 and index % 2 != 0:
                 indices.append(index)
                 # print "odd", index, state
+
         else:
             pass
+    if not len(indices):
+        for index, state in enumerate(shot_grid):
+            if state == "0":
+                indices.append(index)
 
     return indices
 
 
 def ship_search(indices, shot_grid):
-    #rn = random.randint(0, len(indices) - 1)
-    # go through every 3rd
-    """
     iteration = 0
-    gap = 2
+    gap = 1
     row = 0
-    counter = 0
+    position = 0
     shot = None
+    # keep running through pattern until a shot option is available
     while True:
-        # the number of iters
-        #c 0 3  6  9  1 4  7  10 2 
-        #r 0 3  6  9  0 3  6  9  0
-        #s 0 33 66 99 1 34 67 *  2
-        shot = counter + row * 10
-        #print "iterations: ", iteration,"shot: ", shot, "row: ", row, "cnt: ", counter
+        shot = position + row * 10
+        # print "iterations: ", iteration,"shot: ", shot, "row: ", row, "pos: ", position
 
+        # once off board let's move to next position based on which iteration
         if shot > 99:
-            iteration = iteration + 1
-            counter = iteration + iteration * gap
+            iteration += 1
+            position = iteration + iteration * gap
             row = 0
             continue
 
-        if iteration > 3:
+        if iteration > 9:
+            # print "too many iters"
             shot = None
             break
 
-        if shot_grid[shot] == "0" :
+        if shot_grid[shot] == "0":
+            # print "somewhere to shoot"
             break
 
         # move to the new position
-        row = row + gap
-        counter = counter + gap
-    
-    if not shot and shot <> 0 :
-    """
-    global shot
-    if True:
-        #print "hoohah!"
+        row += gap
+        position += gap
+        if position > 9:
+            position = 0
+
+    if not shot and shot != 0:
+        # print "hoohah!\n\m"
+        indices = get_empty(shot_grid, False)
         shot = indices[random.randint(0, len(indices) - 1)]
     return shot
 
@@ -99,11 +101,7 @@ def right(i):
 
 
 def main(shot_grid=None):
-    """
-
-    :param shot_grid:
-    :return:
-    """
+    # print "=========================================================================="
     if not shot_grid:
         shot_grid = []
     if len(sys.argv) > 1:
@@ -120,45 +118,49 @@ def main(shot_grid=None):
         # go through shot grid and find a hit on a ship not sunk
         for i, state in enumerate(shot_grid):
             if state == "1":
+                # print "start:", i, "\n"
                 shot = ship_kill(i, shot_grid)
                 break
 
     if not shot:
-        #print "searching...\n"
+        # print "searching...\n"
         shot = ship_search(indices, shot_grid)
 
+    # print "***"
     sys.stdout.write(str(shot))
-    #print "\n"
+    # print "\n***\n"
     return str(shot)
 
 
 def ship_kill(i, shot_grid):
     funcs = [left, up, right, down]
     shot = False
-    #search all direction
-    search_list = []
+    # search all direction
     for func in funcs:
         target = func(i)
-        search_list.append([func.__doc__, target])
-        #if we found an existing hit, try determine orientation
+        # if we found an existing hit, try determine orientation
         if target and shot_grid[target] == "1":
             if func.__doc__ == "left" or func.__doc__ == "right":
+                # print "horizontal:", func.__doc__, target
                 shot = ship_kill_horizontal(target, shot_grid)
             elif func.__doc__ == "up" or func.__doc__ == "down":
+                # print "vertical", func.__doc__, target
                 shot = ship_kill_vertical(target, shot_grid)
         else:
             pass
-            #print "invalid: " + func.__doc__ + ", " + str(target) + ", " + shot_grid[target]
+            # print "can't find adjoining hit: " + func.__doc__ + ", " + str(target) + ", " + shot_grid[target]
 
+        # print shot
         if shot:
-            #print "primary: " + str(shot)
+            # print "destroy: " + str(shot), "\n"
             return shot
 
     #alternatively if we cannot find any consecutive strikes select the first valid unknown
-    #print "alternative"
+    # print "instead just pick first adjacent unknown cell"
     for func in funcs:
         target = func(i)
         if target and shot_grid[target] == "0":
+            # print "look:", func.__doc__
             shot = target
 
     return shot
@@ -169,6 +171,7 @@ def ship_kill_direction(i, shot_grid, funcs):
     start = i
     for func in funcs:
         i = start
+
         shot = False
         counter = 0
         while not shot:
@@ -176,27 +179,38 @@ def ship_kill_direction(i, shot_grid, funcs):
             target = func(i)
             # if we find a valid shot to take
             if target and shot_grid[target] == "0":
-                #print "shoot: " + func.__doc__ + " " + str(target)
+                # print "shoot: " + func.__doc__ + " " + str(target)
                 shot = target
+                # print "shot is:", str(shot)
                 break
             elif target and shot_grid[target] == "1":
                 #otherwise keep looking this direction
                 i = func(i)
-            elif not target or shot_grid[target] == "-1" or counter > 5:
+                # print "looking:", func.__doc__
+            elif not target:
+                # print "no target:", target
                 break
-
+            elif shot_grid[target] == "-1":
+                # print "previous miss"
+                break
+            # make sure we stop looking after our longest ships worth of cells
+            elif counter > 5:
+                break
+        if shot:
+            break
+    # print "our shot is", shot
     return shot
 
 
 def ship_kill_horizontal(i, shot_grid):
-    funcs = [left, right]
-    #print "looking horizontal...\n"
+    funcs = [right, left]
+    # print "looking horizontal...\n"
     return ship_kill_direction(i, shot_grid, funcs)
 
 
 def ship_kill_vertical(i, shot_grid):
-    funcs = [up, down]
-    #print "looking vertical...\n"
+    funcs = [down, up]
+    # print "looking vertical...\n"
     return ship_kill_direction(i, shot_grid, funcs)
 
 

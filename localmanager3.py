@@ -322,9 +322,20 @@ def main():
     module = "testicle2"
     bot_path = os.path.join(os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda _: None))), module + ".py")
     bot = __import__(module)
-    summary = GameManager.play(bot)
+    summary = GameManager.play(bot, 0.489106243497)
+    print "\n"
     for k, v in summary.items():
-        print k, v
+        if k == "moves" or k == "ships":
+            print k, len(v)
+            if k == "ships":
+                for i, val in enumerate(v):
+                    sys.stdout.write(str(val))
+                    if (i+1) % 10 == 0:
+                        sys.stdout.write("\n")
+            else:
+                print v
+        else:
+            print k,v
 
     sys.stdout.write(str(summary))
 
