@@ -25,43 +25,75 @@ def get_empty(shot_grid, flag=True):
 
 
 def ship_search(indices, shot_grid):
-    iteration = 0
-    gap = 1
-    row = 0
-    position = 0
-    shot = None
-    # keep running through pattern until a shot option is available
-    while True:
-        shot = position + row * 10
-        # print "iterations: ", iteration,"shot: ", shot, "row: ", row, "pos: ", position
+    SEA = 0
+    AIRCRAFT_CARRIER = 1
+    BATTLESHIP = 2
+    SUBMARINE = 3
+    DESTROYER = 4
+    PATROL_BOAT = 5
 
-        # once off board let's move to next position based on which iteration
-        if shot > 99:
-            iteration += 1
-            position = iteration + iteration * gap
-            row = 0
-            continue
+    SHIPS = [
+        (AIRCRAFT_CARRIER, 5),
+        (BATTLESHIP, 4),
+        (SUBMARINE, 3),
+        (DESTROYER, 3),
+        (PATROL_BOAT, 2),
+    ]
+    orientations = {
+        'HORIZONTAL': 0,
+        'VERTICAL': 1
+    }
 
-        if iteration > 9:
-            # print "too many iters"
-            shot = None
-            break
+    ships = list(SHIPS)
+    weights = []
+    for i in range(0, 100, 1):
+        weights.append(0)
+    # print "len:", len(weights)
+    shot = False
+    # for every cell on the board
+    for i in range(0, 99, 1):
+        # sys.stdout.write(str(i))
+        # for every ship remaining
+        for ship_type, ship_size in ships:
+            # for each possible orientation...
+            for orientation in orientations:
+                # print orientation, orientations[orientation]
+                if orientation == 'HORIZONTAL':
+                    func = right
+                else:
+                    func = down
+                cells = ship_scan_o(i, shot_grid, ship_size, func)
 
-        if shot_grid[shot] == "0":
-            # print "somewhere to shoot"
-            break
+                if cells:
+                    # print cells
+                    for cell in cells:
+                        # print "cell:", cell
+                        # this is wrong - need to check all are 0 before weights can be updated
+                        weights[cell] += 1
+                    # print_weights(weights)
 
-        # move to the new position
-        row += gap
-        position += gap
-        if position > 9:
-            position = 0
-
-    if not shot and shot != 0:
-        # print "hoohah!\n\m"
-        indices = get_empty(shot_grid, False)
-        shot = indices[random.randint(0, len(indices) - 1)]
+    shot = weights.index(max(weights))
     return shot
+
+
+def print_weights(weights):
+    for i, val in enumerate(weights):
+        # sys.stdout.write(str(val))
+        if (i+1) % 10 == 0:
+            # sys.stdout.write("\n")
+            pass
+
+def ship_scan_o(start_cell, shot_grid, length, o_func):
+    ship_cells = []
+    shot = start_cell
+    # print repr(o_func)
+    for i in range(0, length, 1):
+        shot = o_func(shot)
+        if shot_grid[shot] != "0":
+            return False
+        else:
+            ship_cells.append(shot)
+    return ship_cells
 
 
 def find_row(i):
@@ -95,7 +127,7 @@ def left(i):
 def right(i):
     """right"""
     shot = i + 1
-    if shot > 99:
+    if shot > 99 or find_row(shot) > find_row(i):
         shot = False
     return shot
 
@@ -127,7 +159,7 @@ def main(shot_grid=None):
         shot = ship_search(indices, shot_grid)
 
     # print "***"
-    sys.stdout.write(str(shot))
+    # sys.stdout.write(str(shot))
     # print "\n***\n"
     return str(shot)
 

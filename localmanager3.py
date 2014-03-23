@@ -322,7 +322,8 @@ def main():
     module = "testicle2"
     bot_path = os.path.join(os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda _: None))), module + ".py")
     bot = __import__(module)
-    summary = GameManager.play(bot, 0.489106243497)
+    # 0.489106243497
+    summary = GameManager.play(bot)
     print "\n"
     for k, v in summary.items():
         if k == "moves" or k == "ships":
@@ -337,7 +338,7 @@ def main():
         else:
             print k,v
 
-    sys.stdout.write(str(summary))
+    # sys.stdout.write(str(summary))
 
 if __name__ == "__main__":
     main()
