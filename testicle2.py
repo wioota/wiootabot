@@ -95,7 +95,7 @@ def left(i):
 def right(i):
     """right"""
     shot = i + 1
-    if shot > 99:
+    if shot > 99 or find_row(shot) > find_row(i):
         shot = False
     return shot
 
