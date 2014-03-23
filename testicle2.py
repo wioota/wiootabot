@@ -25,6 +25,8 @@ def get_empty(shot_grid, flag=True):
 
 
 def ship_search(indices, shot_grid):
+    seed = 0.000410634359885
+    random.seed(seed)
     SEA = 0
     AIRCRAFT_CARRIER = 1
     BATTLESHIP = 2
@@ -48,16 +50,13 @@ def ship_search(indices, shot_grid):
     weights = []
     for i in range(0, 100, 1):
         weights.append(0)
-    # print "len:", len(weights)
     shot = False
     # for every cell on the board
     for i in range(0, 99, 1):
-        # sys.stdout.write(str(i))
         # for every ship remaining
         for ship_type, ship_size in ships:
             # for each possible orientation...
             for orientation in orientations:
-                # print orientation, orientations[orientation]
                 if orientation == 'HORIZONTAL':
                     func = right
                 else:
@@ -65,14 +64,17 @@ def ship_search(indices, shot_grid):
                 cells = ship_scan_o(i, shot_grid, ship_size, func)
 
                 if cells:
-                    # print cells
                     for cell in cells:
-                        # print "cell:", cell
                         # this is wrong - need to check all are 0 before weights can be updated
                         weights[cell] += 1
                     # print_weights(weights)
 
     shot = weights.index(max(weights))
+    # print "select shot:", shot, shot_grid[shot]
+    if shot == 0 and shot_grid[shot] != "0":
+        indices = get_empty(shot_grid, False)
+        # print "switching to RANDOM:", len(indices)
+        shot = indices[random.randint(0, len(indices) - 1)]
     return shot
 
 
@@ -83,10 +85,10 @@ def print_weights(weights):
             # sys.stdout.write("\n")
             pass
 
+
 def ship_scan_o(start_cell, shot_grid, length, o_func):
     ship_cells = []
     shot = start_cell
-    # print repr(o_func)
     for i in range(0, length, 1):
         shot = o_func(shot)
         if shot_grid[shot] != "0":
@@ -142,6 +144,12 @@ def main(shot_grid=None):
     if shot_grid:
         shot_grid = shot_grid.split(',')
 
+        cnt = 0
+    for i, state in enumerate(shot_grid):
+        if state == "2":
+            cnt += 1
+    # print cnt
+
     #do we still have places to shoot at?
     indices = get_empty(shot_grid)
 
@@ -182,7 +190,6 @@ def ship_kill(i, shot_grid):
             pass
             # print "can't find adjoining hit: " + func.__doc__ + ", " + str(target) + ", " + shot_grid[target]
 
-        # print shot
         if shot:
             # print "destroy: " + str(shot), "\n"
             return shot

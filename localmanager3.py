@@ -172,6 +172,7 @@ class GameManager(object):
         """
 
         if seed is None:
+            print "NO SEED!"
             seed = random.random()
         random.seed(seed)
 
@@ -240,21 +241,20 @@ class GameManager(object):
         try:
             bot_move = int(bot_move)
         except ValueError:
-            print "\n", str(shot_grid), str(bot_move), "\n"
+            # print "\n", str(shot_grid), str(bot_move), "\n"
             raise _BotMoveIllegalException({
                 "game_state":   str(shot_grid),
                 "move":         str(bot_move),
                 })
         if bot_move < 0 or bot_move >= len(shot_grid.squares):
-            print "\n", str(shot_grid), str(bot_move), "\n"
+            # print "\n", str(shot_grid), str(bot_move), "\n"
             raise _BotMoveIllegalException({
-
                 "game_state":   str(shot_grid),
                 "move":         bot_move,
                 })
         x, y = Grid.index_to_coord(bot_move)
         if shot_grid.get(x, y) != ShotGridSquareState.UNKNOWN:
-            print "\n", str(shot_grid), str(bot_move), "\n"
+            # print "\n", str(shot_grid), str(bot_move), "\n"
             raise _BotMoveIllegalException({
                 "game_state":   str(shot_grid),
                 "move":         bot_move,
@@ -294,14 +294,18 @@ class _BotException(Exception):
 
     def __init__(self, data):
         data["type"] = self.__class__.__name__
+        data["msg"] = self.__doc__
         self.data = data
-        self.out(self.data)
 
     def __str__(self):
-        repr(self.data)
-
-    def out(self, data):
-        print self.__str__()
+        for k, v in self.data:
+            if k == "game_state":
+                for i, val in enumerate(v):
+                    sys.stdout.write(str(val))
+                    if (i+1) % 10 == 0:
+                        sys.stdout.write("\n")
+        else:
+            print k, v
 
 class _BotMoveIllegalException(_BotException): 
     """The bot made an illegal move."""
@@ -322,7 +326,6 @@ def main():
     module = "testicle2"
     bot_path = os.path.join(os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda _: None))), module + ".py")
     bot = __import__(module)
-    # 0.489106243497
     summary = GameManager.play(bot)
     print "\n"
     for k, v in summary.items():
